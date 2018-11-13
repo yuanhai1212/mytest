@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="/static/bootstrap-3.3.7-dist/css/bootstrap.min.css">
+    <script src="/static/jquery-3.3.1.js"></script>
+    <script src="/static/bootstrap-3.3.7-dist/js/bootstrap.min.js"></script>
+    <title>个人站点</title>
+    <style>
+        .home_head {
+            height: 60px;
+            background: #1b6d85;
+        }
+    </style>
+</head>
+<body>
+<div class="home_head">
+
+    <span></span>
+    <span><a href="" style="float: right;margin-right: 30px;margin-top: 20px;color: white">管理</a></span>
+</div>
+<div class="container-fluid" style="margin-top: 10px">
+    <div class="row">
+        <div class="col-md-3">
+
+            <div class="panel panel-danger">
+                <div class="panel-heading">我的标签</div>
+                <div class="panel-body">
+                    {% for foo in tag_count %}
+                        <p><a href="/{{ username }}/tag/{{ foo.0 }}">{{ foo.0 }}({{ foo.1 }})</a></p>
+
+                    {% endfor %}
+
+                </div>
+            </div>
+            <div class="panel panel-info">
+                <div class="panel-heading">随笔分类</div>
+                <div class="panel-body">
+                    {% for foo in category_count %}
+                        <p><a href="/{{ username }}/category/{{ foo.0 }}">{{ foo.0 }}({{ foo.1 }})</a></p>
+
+                    {% endfor %}
+                </div>
+            </div>
+            <div class="panel panel-danger">
+                <div class="panel-heading">随笔档案</div>
+                <div class="panel-body">
+                    {% for foo in time_count %}
+                        <p><a href="/{{ username }}/time/{{ foo.0|date:'Y-m' }}">{{ foo.0|date:'Y-m' }}({{ foo.1 }})</a></p>
+
+                    {% endfor %}
+
+                </div>
+            </div>
+
+
+        </div>
+        <div class="col-md-9">
+            {% block detail %}
+
+            {% endblock %}
+
+
+
+
+        </div>
+    </div>
+</div>
+</body>
+</html>

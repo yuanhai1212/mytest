@@ -1,0 +1,205 @@
+{% extends 'base.html' %}
+
+{% block detail %}
+
+
+    <style>
+        #div_digg {
+            float: right;
+            margin-bottom: 10px;
+            margin-right: 30px;
+            font-size: 12px;
+            width: 125px;
+            text-align: center;
+            margin-top: 10px;
+        }
+
+        .diggit {
+            float: left;
+            width: 46px;
+            height: 52px;
+            background: url(/static/img/upup.gif) no-repeat;
+            text-align: center;
+            cursor: pointer;
+            margin-top: 2px;
+            padding-top: 5px;
+        }
+
+        .buryit {
+            float: right;
+            margin-left: 20px;
+            width: 46px;
+            height: 52px;
+            background: url(/static/img/downdown.gif) no-repeat;
+            text-align: center;
+            cursor: pointer;
+            margin-top: 2px;
+            padding-top: 5px;
+        }
+
+        .clear {
+            clear: both;
+        }
+
+
+    </style>
+    <div>
+        <p><h4 class="text-center">{{ article.title }}</h4></p>
+        <p>{{ article.content|safe }}</p>
+
+        <div class="clearfix">
+
+            <div id="div_digg">
+                <div class="diggit action">
+                    <span class="diggnum" id="digg_count">{{ article.up_count }}</span>
+                </div>
+                <div class="buryit action">
+                    <span class="burynum" id="bury_count">{{ article.down_count }}</span>
+                </div>
+                <div class="clear"></div>
+                <div class="diggword" id="digg_tips" style="color: red;"></div>
+            </div>
+
+        </div>
+        {#    评论列表#}
+        <div>
+            <ul class="list-group comment_list">
+                {% for comment in comment_list %}
+                    {#            #17楼 2018-02-25 18:47 隔壁古二蛋  #}
+                    <li class="list-group-item">
+                        <span>#{{ forloop.counter }}楼</span>
+                        <span>{{ comment.create_time|date:'Y-m-d' }}</span>
+                        <span>{{ comment.user.username }}</span>
+                        <span><a class="pull-right my_reply" user="{{ comment.user.username }}"
+                                 comment_id="{{ comment.pk }}">回复</a></span>
+                        {% if comment.parent_comment %}
+                            <div class="well">
+                                <span>@{{ comment.parent_comment.user.username }}</span>
+                                <p>{{ comment.parent_comment.content }}</p>
+                            </div>
+
+
+                        {% endif %}
+
+                        <p>{{ comment.content }}</p>
+
+
+                    </li>
+                {% endfor %}
+            </ul>
+        </div>
+        {#   评论 #}
+        <div>
+            <p>发表评论</p>
+            <p>
+                昵称：<input type="text" id="tbCommentAuthor" class="author" disabled="disabled" size="50" value="刘清政">
+            </p>
+            <p>评论内容</p>
+            <p><textarea name="" id="comment_content" cols="60" rows="10"></textarea></p>
+            <button class="btn btn-primary btn_submit">回复</button>
+        </div>
+
+    </div>
+
+    <script>
+        var par_id = '';
+        $(".action").click(function () {
+            var is_up = $(this).hasClass('diggit')
+            //alert(is_up)
+            var obj = $(this).children('span')
+
+
+            $.ajax({
+                url: '/diggit/',
+                type: 'post',
+                //谁对那篇文章点赞或点踩
+                data: {
+                    'csrfmiddlewaretoken': '{{ csrf_token }}',
+                    'article_id':{{ article.pk }},
+                    'is_up': is_up
+
+                },
+                success: function (data) {
+                    console.log(data)
+                    $(".diggword").text(data.msg)
+                    if (data.status == 1) {
+                        obj.text(Number(obj.text()) + 1)
+                    }
+
+
+                }
+
+            })
+
+        })
+
+        $(".btn_submit").click(function () {
+            var content = $("#comment_content").val();
+            if (par_id) {
+                var num = content.indexOf('\n') + 1;
+                content = content.slice(num);
+                alert(content)
+            }
+            $.ajax({
+                url: '/comment/',
+                type: 'post',
+                data: {
+                    'csrfmiddlewaretoken': '{{ csrf_token }}',
+                    'article_id':{{ article.pk }},  //文章的id
+                    'comment': content,  //评论的内容
+                    'par_id': par_id  //根评论
+                },
+                success: function (data) {
+                    $("#comment_content").val("");
+                    console.log(data);
+                    if (data.status) {
+                        var username = data.user_name;
+                        var time = data.time;
+                        var content = data.content;
+                        var par_name=data.par_name;
+                        var par_content=data.par_content;
+
+                        var ss='';
+                        if(par_name){
+                            ss = `
+                          <li class="list-group-item">
+                            <span>${ time }</span>
+                            <span>${ username}</span>
+                            <div class="well">
+                                <span>@ ${par_name}</span>
+                                <p>${par_content}</p>
+                            </div>
+                            <p>${ content }</p>
+                           </li>
+                        `
+                        }else{
+                           ss = `
+                          <li class="list-group-item">
+                            <span>${ time }</span>
+                            <span>${ username}</span>
+                            <p>${ content }</p>
+                           </li>
+                        `
+                        }
+                        $(".comment_list").append(ss)
+
+
+                    }
+
+                }
+            })
+
+        })
+
+
+        $(".my_reply").click(function () {
+
+            var name = "@" + $(this).attr('user') + '\n';
+            par_id = $(this).attr('comment_id');
+            $("#comment_content").focus();
+            $("#comment_content").val(name)
+
+
+        })
+    </script>
+{% endblock %}
